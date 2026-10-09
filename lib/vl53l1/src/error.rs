@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use core::convert::TryFrom;
 
 #[derive(Debug)]

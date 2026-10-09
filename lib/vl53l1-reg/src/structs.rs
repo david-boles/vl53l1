@@ -1,4 +1,4 @@
-use embedded_hal::i2c::I2c;
+use embedded_hal_async::i2c::I2c;
 
 /// A struct of contiguous entries within the register map.
 pub trait Entries: Sized {
@@ -17,12 +17,14 @@ pub trait Entries: Sized {
     /// Write the entries via I2C.
     ///
     /// Implemented in terms of `write_to_slice`.
-    fn write<I>(&self, i2c: &mut I) -> Result<(), I::Error>
+    #[allow(async_fn_in_trait)]
+    async fn write<I>(&self, i2c: &mut I) -> Result<(), I::Error>
     where
         I: I2c;
 
     /// Read a new instance of the `Entries` struct from I2C.
-    fn read<I>(i2c: &mut I) -> Result<Self, I::Error>
+    #[allow(async_fn_in_trait)]
+    async fn read<I>(i2c: &mut I) -> Result<Self, I::Error>
     where
         I: I2c;
 }
@@ -55,21 +57,21 @@ macro_rules! entries_struct {
                 )*
             }
 
-            fn write<I>(&self, i2c: &mut I) -> Result<(), I::Error>
+            async fn write<I>(&self, i2c: &mut I) -> Result<(), I::Error>
             where
                 I: I2c,
             {
                 let mut bs = [0u8; Self::LEN_BYTES];
                 self.write_to_slice(&mut bs);
-                crate::write_slice(i2c, Self::INDEX, &bs)
+                crate::write_slice(i2c, Self::INDEX, &bs).await
             }
 
-            fn read<I>(i2c: &mut I) -> Result<Self, I::Error>
+            async fn read<I>(i2c: &mut I) -> Result<Self, I::Error>
             where
                 I: I2c,
             {
                 let mut bs = [0u8; Self::LEN_BYTES];
-                crate::read_slice(i2c, Self::INDEX, &mut bs).map(|()| {
+                crate::read_slice(i2c, Self::INDEX, &mut bs).await.map(|()| {
                     $(
                         let start = (<$Entry as crate::Entry>::INDEX as u16 - Self::INDEX as u16) as usize;
                         let mut arr: <$Entry as crate::Entry>::Array = Default::default();

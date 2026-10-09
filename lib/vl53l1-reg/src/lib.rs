@@ -24,7 +24,7 @@ mod map;
 pub mod settings;
 pub mod structs;
 
-use embedded_hal::i2c::I2c;
+use embedded_hal_async::i2c::I2c;
 pub use map::*;
 pub use structs::Entries;
 
@@ -58,7 +58,7 @@ pub const SLAVE_ADDR: u8 = 0x52 >> 1;
 /// Write given slice of data to the device at the given index.
 ///
 /// **Panic**s if `slice.len()` is greater than `MAX_SLICE_LEN`.
-pub fn write_slice<I>(i2c: &mut I, index: Index, slice: &[u8]) -> Result<(), I::Error>
+pub async fn write_slice<I>(i2c: &mut I, index: Index, slice: &[u8]) -> Result<(), I::Error>
 where
     I: I2c,
 {
@@ -80,76 +80,76 @@ where
     }
 
     // Write the data to the slave.
-    i2c.write(SLAVE_ADDR, &data)
+    i2c.write(SLAVE_ADDR, &data).await
 }
 
 /// Read the value at the given index into the given slice.
 ///
 /// The length of the given slice must represent the length of the expected amount of data to be
 /// read.
-pub fn read_slice<I>(i2c: &mut I, index: Index, slice: &mut [u8]) -> Result<(), I::Error>
+pub async fn read_slice<I>(i2c: &mut I, index: Index, slice: &mut [u8]) -> Result<(), I::Error>
 where
     I: I2c,
 {
     let arr: [u8; 2] = index.into();
-    i2c.write_read(SLAVE_ADDR, &arr, slice)
+    i2c.write_read(SLAVE_ADDR, &arr, slice).await
 }
 
 /// Shorthand for writing a slice with a single byte.
-pub fn write_byte<I>(i2c: &mut I, index: Index, byte: u8) -> Result<(), I::Error>
+pub async fn write_byte<I>(i2c: &mut I, index: Index, byte: u8) -> Result<(), I::Error>
 where
     I: I2c,
 {
-    write_slice(i2c, index, &[byte])
+    write_slice(i2c, index, &[byte]).await
 }
 
 /// Shorthand for reading a single byte from the register at the given index.
-pub fn read_byte<I>(i2c: &mut I, index: Index) -> Result<u8, I::Error>
+pub async fn read_byte<I>(i2c: &mut I, index: Index) -> Result<u8, I::Error>
 where
     I: I2c,
 {
     let mut b = [0u8];
-    read_slice(i2c, index, &mut b)?;
+    read_slice(i2c, index, &mut b).await?;
     let [b] = b;
     Ok(b)
 }
 
 /// Shorthand for writing a slice with a single word.
-pub fn write_word<I>(i2c: &mut I, index: Index, word: u16) -> Result<(), I::Error>
+pub async fn write_word<I>(i2c: &mut I, index: Index, word: u16) -> Result<(), I::Error>
 where
     I: I2c,
 {
     let [a, b] = word.to_be_bytes();
-    write_slice(i2c, index, &[a, b])
+    write_slice(i2c, index, &[a, b]).await
 }
 
 /// Shorthand for reading two consecutive bytes from the given index.
-pub fn read_word<I>(i2c: &mut I, index: Index) -> Result<u16, I::Error>
+pub async fn read_word<I>(i2c: &mut I, index: Index) -> Result<u16, I::Error>
 where
     I: I2c,
 {
     let mut bs = [0u8; 2];
-    read_slice(i2c, index, &mut bs)?;
+    read_slice(i2c, index, &mut bs).await?;
     Ok(u16::from_be_bytes(bs))
 }
 
 /// Read the the given entry.
-pub fn write_entry<I, E>(i2c: &mut I, entry: E) -> Result<(), I::Error>
+pub async fn write_entry<I, E>(i2c: &mut I, entry: E) -> Result<(), I::Error>
 where
     I: I2c,
     E: Entry,
 {
     let arr = entry.into_array();
-    write_slice(i2c, E::INDEX, arr.as_ref())
+    write_slice(i2c, E::INDEX, arr.as_ref()).await
 }
 
 /// Read the value for a single entry.
-pub fn read_entry<I, E>(i2c: &mut I) -> Result<E, I::Error>
+pub async fn read_entry<I, E>(i2c: &mut I) -> Result<E, I::Error>
 where
     I: I2c,
     E: Entry,
 {
     let mut arr: E::Array = Default::default();
-    read_slice(i2c, E::INDEX, arr.as_mut())?;
+    read_slice(i2c, E::INDEX, arr.as_mut()).await?;
     Ok(E::from_array(arr))
 }

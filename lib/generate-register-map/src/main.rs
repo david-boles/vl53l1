@@ -1,3 +1,4 @@
+#![allow(unused)]
 //! First argument is path to `vl53l1_register_map.h`, second is output `reg.rs` path.
 //!
 //! ## Steps

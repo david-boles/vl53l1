@@ -1,3 +1,4 @@
+#![allow(unused)]
 //! TODO: These are `#define` values that the user is meant to be able to tweak... Should probably
 //! make this a `Config` struct or something similar.
 

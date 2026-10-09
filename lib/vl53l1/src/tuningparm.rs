@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 /// Default tuning parameters.
 pub mod default {
     pub const VERSION: u16 = 32771;
