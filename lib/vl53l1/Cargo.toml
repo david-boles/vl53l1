@@ -16,6 +16,7 @@ embedded-hal = "1.0.0"
 nb = "1"
 ufmt = { version = "0.1.0", optional = true }
 vl53l1-reg = { version = "0.2", path = "../vl53l1-reg" }
+defmt = "1.0.1"
 
 # TODO
 # [features]

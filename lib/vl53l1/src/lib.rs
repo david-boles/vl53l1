@@ -766,10 +766,10 @@ pub struct RangingMeasurementData {
     time_stamp: u32,
     /// 8-bit Stream Count.
     pub stream_count: u8,
-    /// Indicate a quality level in percentage from 0 to 100.
-    ///
-    /// Not yet implemented (by ST).
-    range_quality_level: u8,
+    // /// Indicate a quality level in percentage from 0 to 100.
+    // ///
+    // /// Not yet implemented (by ST).
+    // range_quality_level: u8,
     /// Return signal rate (MCPS)\n these is a 16.16 fix point value, which is effectively a
     /// measure of target reflectance.
     pub signal_rate_rtn_mega_cps: FixPoint1616,
@@ -3681,38 +3681,40 @@ fn get_limit_check_enable(dev: &Device, limit_check_id: u16) -> Result<u8, StErr
     }
 }
 
-fn compute_rql(active_results: u8, filtered_range_status: u8, results_data: &RangeData) -> u8 {
-    let srl: i16 = 300;
-    let sras: u16 = 30;
-    let gi: FixPoint1616 = 7713587; // 117.7 * 65536
-    let ggm: FixPoint1616 = 3198157; // 48.8 * 65536
-    let lrap: FixPoint1616 = 6554; // 0.1 * 65536
-    if active_results == 0 {
-        0
-    } else if filtered_range_status == DeviceError::PHASECONSISTENCY as u8 {
-        50
-    } else {
-        let ras: FixPoint1616 = if results_data.median_range_mm < srl {
-            sras as u32 * 65_536 as u32
-        } else {
-            lrap * results_data.median_range_mm as u32
-        };
-        let srql: FixPoint1616 = if ras != 0 {
-            let mut partial: FixPoint1616 = ggm * results_data.sigma_mm as u32;
-            partial = partial + (ras >> 1);
-            partial = partial / ras;
-            partial = partial * 65_536;
-            if partial <= gi {
-                gi - partial
-            } else {
-                50 * 65536
-            }
-        } else {
-            100 * 65536
-        };
-        core::cmp::max(50, core::cmp::min(100, (srql >> 16) as u8))
-    }
-}
+// fn compute_rql(active_results: u8, filtered_range_status: u8, results_data: &RangeData) -> u8 {
+//     let srl: i16 = 300;
+//     let sras: u16 = 30;
+//     let gi: FixPoint1616 = 7713587; // 117.7 * 65536
+//     let ggm: FixPoint1616 = 3198157; // 48.8 * 65536
+//     let lrap: FixPoint1616 = 6554; // 0.1 * 65536
+//     if active_results == 0 {
+//         0
+//     } else if filtered_range_status == DeviceError::PHASECONSISTENCY as u8 {
+//         50
+//     } else {
+//         let ras: FixPoint1616 = if results_data.median_range_mm < srl {
+//             sras as u32 * 65_536 as u32
+//         } else {
+//             lrap * results_data.median_range_mm as u32
+//         };
+//         let srql: FixPoint1616 = if ras != 0 {
+//             use defmt::info;
+//             info!("{}, {}", ggm, results_data.sigma_mm);
+//             let mut partial: FixPoint1616 = ggm * results_data.sigma_mm as u32;
+//             partial = partial + (ras >> 1);
+//             partial = partial / ras;
+//             partial = partial * 65_536;
+//             if partial <= gi {
+//                 gi - partial
+//             } else {
+//                 50 * 65536
+//             }
+//         } else {
+//             100 * 65536
+//         };
+//         core::cmp::max(50, core::cmp::min(100, (srql >> 16) as u8))
+//     }
+// }
 
 fn convert_status_lite(filtered_range_status: u8) -> RangeStatus {
     let dev_err = DeviceError::try_from(filtered_range_status);
@@ -3739,7 +3741,7 @@ fn set_simple_data(
 ) -> Result<(), StError> {
     rmd.time_stamp = results_data.time_stamp;
     let filtered_range_status: u8 = results_data.range_status as u8 & 0x1F;
-    rmd.range_quality_level = compute_rql(active_results, filtered_range_status, results_data);
+    // rmd.range_quality_level = compute_rql(active_results, filtered_range_status, results_data);
 
     let signal_rate: FixPoint1616 =
         fix_point_97_to_fix_point_1616(results_data.peak_signal_count_rate_mcps);
