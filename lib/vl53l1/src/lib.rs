@@ -3878,7 +3878,6 @@ async fn get_measurement_results<I>(
 where
     I: I2c,
 {
-    let start = Instant::now();
     // TODO: Original code does all this in one read which is probably slightly quicker.
     if device_results_level >= DeviceResultsLevel::FULL {
         dev.data.ll.dbg_results = DebugResults::read(i2c).await?;
@@ -3887,8 +3886,6 @@ where
         dev.data.ll.core_results = CoreResults::read(i2c).await?;
     }
     dev.data.ll.sys_results = SystemResults::read(i2c).await?;
-    let delay = start.elapsed().as_micros();
-    info!("delay: {}us", delay);
 
     Ok(())
 }
